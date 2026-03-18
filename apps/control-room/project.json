@@ -1,26 +1,26 @@
 {
-  "name": "angular-demo",
+  "name": "control-room",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "prefix": "app",
-  "sourceRoot": "apps/angular-demo/src",
+  "sourceRoot": "apps/control-room/src",
   "tags": [],
   "targets": {
     "build": {
       "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/angular-demo",
-        "browser": "apps/angular-demo/src/main.ts",
+        "outputPath": "dist/apps/control-room",
+        "browser": "apps/control-room/src/main.ts",
         "polyfills": ["zone.js"],
-        "tsConfig": "apps/angular-demo/tsconfig.app.json",
+        "tsConfig": "apps/control-room/tsconfig.app.json",
         "assets": [
           {
             "glob": "**/*",
-            "input": "apps/angular-demo/public"
+            "input": "apps/control-room/public"
           }
         ],
-        "styles": ["apps/angular-demo/src/styles.css"]
+        "styles": ["apps/control-room/src/styles.css"]
       },
       "configurations": {
         "production": {
@@ -51,10 +51,10 @@
       "executor": "@angular/build:dev-server",
       "configurations": {
         "production": {
-          "buildTarget": "angular-demo:build:production"
+          "buildTarget": "control-room:build:production"
         },
         "development": {
-          "buildTarget": "angular-demo:build:development"
+          "buildTarget": "control-room:build:development"
         }
       },
       "defaultConfiguration": "development"
@@ -62,7 +62,7 @@
     "extract-i18n": {
       "executor": "@angular/build:extract-i18n",
       "options": {
-        "buildTarget": "angular-demo:build"
+        "buildTarget": "control-room:build"
       }
     },
     "lint": {
@@ -72,15 +72,22 @@
       "executor": "@nx/vite:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../coverage/apps/angular-demo"
+        "reportsDirectory": "../../coverage/apps/control-room"
       }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "firebase deploy --only hosting"
+      },
+      "dependsOn": ["build"]
     },
     "serve-static": {
       "continuous": true,
       "executor": "@nx/web:file-server",
       "options": {
-        "buildTarget": "angular-demo:build",
-        "staticFilePath": "dist/apps/angular-demo/browser",
+        "buildTarget": "control-room:build",
+        "staticFilePath": "dist/apps/control-room/browser",
         "spa": true
       }
     }
