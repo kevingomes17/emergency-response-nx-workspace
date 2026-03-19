@@ -49,6 +49,7 @@ firebase-debug.log
 .env
 .env.local
 **/environments/environment.ts
+apps/field-app/src/app/environment.ts
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
