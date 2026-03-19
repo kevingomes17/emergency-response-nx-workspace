@@ -1,0 +1,76 @@
+<div class="dashboard">
+  <header class="dashboard-header">
+    <h1>Emergency Control Room</h1>
+  </header>
+
+  <section class="stats-grid">
+    <er-stat-card
+      label="Critical" [value]="criticalCount()" color="#d32f2f"
+      [active]="activeFilter() === 'critical'"
+      (cardClick)="toggleFilter('critical')"
+    />
+    <er-stat-card
+      label="High" [value]="highCount()" color="#f57c00"
+      [active]="activeFilter() === 'high'"
+      (cardClick)="toggleFilter('high')"
+    />
+    <er-stat-card
+      label="Medium" [value]="mediumCount()" color="#fbc02d"
+      [active]="activeFilter() === 'medium'"
+      (cardClick)="toggleFilter('medium')"
+    />
+    <er-stat-card
+      label="Low" [value]="lowCount()" color="#388e3c"
+      [active]="activeFilter() === 'low'"
+      (cardClick)="toggleFilter('low')"
+    />
+    <er-stat-card
+      label="Available Resources" [value]="resourceCount()" color="#1565c0"
+      [active]="activeFilter() === 'resources'"
+      (cardClick)="toggleFilter('resources')"
+    />
+  </section>
+
+  @if (activeFilter()) {
+    <div class="filter-bar">
+      <span class="filter-label">
+        Showing: {{ activeFilter() === 'resources' ? 'All Resources' : activeFilter()!.toUpperCase() + ' incidents' }}
+      </span>
+      <button class="clear-filter" (click)="toggleFilter(null)">Clear filter</button>
+    </div>
+  }
+
+  @if (showResources()) {
+    <section class="resources-section">
+      <h2>Resources</h2>
+      <div class="resources-grid">
+        @for (resource of resources$ | async; track resource.unit_id) {
+          <er-resource-card [resource]="resource" />
+        } @empty {
+          <p class="empty-state">No resources</p>
+        }
+      </div>
+    </section>
+  } @else {
+    <section class="incident-list-section">
+      <h2>
+        @if (activeFilter()) {
+          {{ activeFilter()!.charAt(0).toUpperCase() + activeFilter()!.slice(1) }} Incidents
+        } @else {
+          Live Incidents
+        }
+      </h2>
+
+      <div class="incident-list">
+        @for (incident of filteredIncidents(); track incident.incident_id) {
+          <er-incident-card
+            [incident]="incident"
+            (selectIncident)="onIncidentSelect($event)"
+          />
+        } @empty {
+          <p class="empty-state">No {{ activeFilter() ?? '' }} incidents</p>
+        }
+      </div>
+    </section>
+  }
+</div>

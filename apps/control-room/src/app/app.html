@@ -1,2 +1,14 @@
-<app-nx-welcome></app-nx-welcome>
-<router-outlet></router-outlet>
+<main class="app-container">
+  <router-outlet></router-outlet>
+</main>
+
+<nav class="bottom-nav">
+  <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+    <span class="nav-icon">&#x1F4CA;</span>
+    <span class="nav-label">Dashboard</span>
+  </a>
+  <a routerLink="/alerts" routerLinkActive="active" class="nav-item">
+    <span class="nav-icon">&#x1F514;</span>
+    <span class="nav-label">Alerts</span>
+  </a>
+</nav>

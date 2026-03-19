@@ -1,0 +1,141 @@
+<div class="detail-page">
+  @if (incident$ | async; as incident) {
+    <header class="detail-header">
+      <button class="back-btn" (click)="goBack()">&larr; Back</button>
+      <h1>{{ incident.type | titlecase }} Incident</h1>
+    </header>
+
+    <div class="badges-row">
+      <er-severity-badge [severity]="incident.severity" />
+      <er-status-badge [status]="incident.status" />
+      @if (incident.escalation_level > 0) {
+        <span class="escalation-badge">Escalation L{{ incident.escalation_level }}</span>
+      }
+    </div>
+
+    <section class="details-grid">
+      <div class="detail-item">
+        <span class="detail-label">Incident ID</span>
+        <span class="detail-value">{{ incident.incident_id }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Type</span>
+        <span class="detail-value">{{ incident.type | titlecase }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Location</span>
+        <span class="detail-value">{{ incident.location.lat }}, {{ incident.location.lng }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Reported By</span>
+        <span class="detail-value">{{ incident.reported_by || 'Unknown' }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Created</span>
+        <span class="detail-value">{{ incident.created_at | date:'medium' }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Updated</span>
+        <span class="detail-value">{{ incident.updated_at | date:'medium' }}</span>
+      </div>
+      @if (incident.resolved_at) {
+        <div class="detail-item">
+          <span class="detail-label">Resolved</span>
+          <span class="detail-value">{{ incident.resolved_at | date:'medium' }}</span>
+        </div>
+      }
+    </section>
+
+    @if (incident.description) {
+      <section class="description-section">
+        <h2>Description</h2>
+        <p>{{ incident.description }}</p>
+      </section>
+    }
+
+    <!-- Assigned Resources -->
+    <section class="resources-section">
+      <h2>Assigned Resources</h2>
+      @if (incident.assigned_units.length > 0) {
+        <div class="assigned-list">
+          @for (unitId of incident.assigned_units; track unitId) {
+            <div class="assigned-unit">
+              <span class="unit-id">{{ unitId }}</span>
+              @if (incident.status !== 'resolved' && incident.status !== 'closed') {
+                <button class="unassign-btn" (click)="unassignResource(incident, unitId)">
+                  Remove
+                </button>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="no-resources">No resources assigned</p>
+      }
+
+      @if (incident.status !== 'resolved' && incident.status !== 'closed') {
+        <h3>Assign Available Resource</h3>
+        @if (availableResources$ | async; as resources) {
+          @if (resources.length > 0) {
+            <div class="available-list">
+              @for (resource of resources; track resource.unit_id) {
+                <div class="available-unit">
+                  <div class="resource-info">
+                    <span class="resource-id">{{ resource.unit_id }}</span>
+                    <span class="resource-type">{{ resource.type }}</span>
+                    <span class="resource-capacity">Capacity: {{ resource.capacity }}</span>
+                  </div>
+                  <button
+                    class="assign-btn"
+                    (click)="assignResource(incident, resource.unit_id)"
+                    [disabled]="incident.assigned_units.includes(resource.unit_id)"
+                  >
+                    {{ incident.assigned_units.includes(resource.unit_id) ? 'Assigned' : 'Assign' }}
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="no-resources">No available resources</p>
+          }
+        }
+      }
+    </section>
+
+    <section class="actions-section">
+      <h2>Actions</h2>
+      <div class="actions-row">
+        <button
+          class="action-btn acknowledge"
+          (click)="acknowledge(incident)"
+          [disabled]="incident.status !== 'reported'"
+        >
+          Acknowledge
+        </button>
+        <button
+          class="action-btn dispatch"
+          (click)="dispatch(incident)"
+          [disabled]="incident.status === 'dispatched' || incident.status === 'resolved' || incident.status === 'closed'"
+        >
+          Dispatch
+        </button>
+        <button
+          class="action-btn resolve"
+          (click)="resolve(incident)"
+          [disabled]="incident.status === 'resolved' || incident.status === 'closed'"
+        >
+          Resolve
+        </button>
+        <button
+          class="action-btn escalate"
+          (click)="escalate(incident)"
+          [disabled]="incident.escalation_level >= 3 || incident.status === 'resolved' || incident.status === 'closed'"
+        >
+          Escalate
+        </button>
+      </div>
+    </section>
+  } @else {
+    <div class="loading">Loading incident...</div>
+  }
+</div>

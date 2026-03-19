@@ -1,17 +1,46 @@
-# AngularDemo
+# Emergency Response Solution
+
+This monorepo is setup using [Nx workspace](https://nx.dev). It contains a Web app, a Mobile App & Google Cloud Functions. The Web app & Cloud Functions are hosted in Firebase.
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
 
 [Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
 
 ## Getting started
 
+**Install dependencies**
+
+```sh
+npm install -g nx firebase-tools@latest
+
+```
+
+**Run the apps locally**
+
 ```sh
 npm install
+nx graph # Optional. View project & library dependency graph. Launches the NX Console.
 
-nx graph
+# Copy the .env.example to .env with `VITE_USE_FIREBASE_EMULATOR=true`
+
+nx serve cloud-functions # Launch the cloud-functions locally
+npx ts-node apps/cloud-functions/src/seed.ts # Load seed data
+nx serve control-room # Launch the control-room web app
+
+npx nx serve field-app # Web (quickest for testing). This uses Vite to serve it as a web app in your browser.
+
+npx nx run field-app:run-ios # iOS Simulator. Requires Xcode and CocoaPods installed.
+
+npx nx run field-app:run-android # Android Emulator. Requires Android Studio and an emulator set up.
+```
+
+**Deployment instructions**
+
+```sh
+nx deploy control-room    # Deploy the control-room app
+nx deploy cloud-functions # Deploy cloud functions
+
 ```
 
 ## Run tasks

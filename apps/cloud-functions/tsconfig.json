@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2020",
+    "outDir": "../../dist/apps/cloud-functions",
+    "rootDir": "../..",
+    "strict": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "baseUrl": "../..",
+    "paths": {
+      "@emergency-response/shared/data-models": [
+        "libs/shared/data-models/src/index.ts"
+      ],
+      "@emergency-response/shared/util-severity": [
+        "libs/shared/util-severity/src/index.ts"
+      ],
+      "@emergency-response/shared/util-escalation": [
+        "libs/shared/util-escalation/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "../../libs/shared/data-models/src/**/*.ts",
+    "../../libs/shared/util-severity/src/**/*.ts",
+    "../../libs/shared/util-escalation/src/**/*.ts"
+  ],
+  "exclude": ["node_modules", "src/seed.ts"]
+}

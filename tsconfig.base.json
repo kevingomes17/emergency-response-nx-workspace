@@ -14,7 +14,32 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@emergency-response/control-room/data-access": [
+        "libs/control-room/data-access/src/index.ts"
+      ],
+      "@emergency-response/control-room/feature-alerts": [
+        "libs/control-room/feature-alerts/src/index.ts"
+      ],
+      "@emergency-response/control-room/feature-dashboard": [
+        "libs/control-room/feature-dashboard/src/index.ts"
+      ],
+      "@emergency-response/control-room/feature-incident": [
+        "libs/control-room/feature-incident/src/index.ts"
+      ],
+      "@emergency-response/control-room/ui-components": [
+        "libs/control-room/ui-components/src/index.ts"
+      ],
+      "@emergency-response/shared/data-models": [
+        "libs/shared/data-models/src/index.ts"
+      ],
+      "@emergency-response/shared/util-escalation": [
+        "libs/shared/util-escalation/src/index.ts"
+      ],
+      "@emergency-response/shared/util-severity": [
+        "libs/shared/util-severity/src/index.ts"
+      ]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

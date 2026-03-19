@@ -6,8 +6,15 @@
   "sourceRoot": "apps/control-room/src",
   "tags": [],
   "targets": {
+    "generate-env": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/generate-env.js"
+      }
+    },
     "build": {
       "executor": "@angular/build:application",
+      "dependsOn": ["generate-env"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/control-room",
@@ -49,6 +56,7 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "dependsOn": ["generate-env"],
       "configurations": {
         "production": {
           "buildTarget": "control-room:build:production"
