@@ -7,7 +7,10 @@ import {
   TextInput,
   StyleSheet,
   ActivityIndicator,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
+import Geolocation from '@react-native-community/geolocation';
 import { db, collection, doc, updateDoc } from '../firebase';
 import { setDoc } from 'firebase/firestore';
 
@@ -36,26 +39,40 @@ export const ReportIncidentScreen: React.FC<Props> = ({ reporterName, reporterEm
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setLocationStatus('error');
-      setLat('37.7749');
-      setLng('-122.4194');
-      return;
-    }
+    const fetchLocation = async () => {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Permission',
+            message: 'This app needs your location to report emergencies accurately.',
+            buttonPositive: 'OK',
+          }
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          setLocationStatus('error');
+          setLat('37.7749');
+          setLng('-122.4194');
+          return;
+        }
+      }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLat(position.coords.latitude.toFixed(6));
-        setLng(position.coords.longitude.toFixed(6));
-        setLocationStatus('success');
-      },
-      () => {
-        setLocationStatus('error');
-        setLat('37.7749');
-        setLng('-122.4194');
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+      Geolocation.getCurrentPosition(
+        (position) => {
+          setLat(position.coords.latitude.toFixed(6));
+          setLng(position.coords.longitude.toFixed(6));
+          setLocationStatus('success');
+        },
+        () => {
+          setLocationStatus('error');
+          setLat('37.7749');
+          setLng('-122.4194');
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      );
+    };
+
+    fetchLocation();
   }, []);
 
   const canSubmit = selectedType && description.trim().length > 0;

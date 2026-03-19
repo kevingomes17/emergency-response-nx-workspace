@@ -9,6 +9,7 @@ import {
   StatusBar,
   ScrollView,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AssignmentsScreen } from './screens/AssignmentsScreen';
 import { IncidentDetailScreen } from './screens/IncidentDetailScreen';
 import { NotificationsScreen } from './screens/NotificationsScreen';
@@ -365,26 +366,33 @@ type AppScreen =
   | { type: 'responder'; user: AppUser }
   | { type: 'public'; publicUser: PublicUser };
 
-function loadSavedPublicUser(): PublicUser | null {
+async function loadSavedPublicUser(): Promise<PublicUser | null> {
   try {
-    const saved = localStorage.getItem('er_public_user');
+    const saved = await AsyncStorage.getItem('er_public_user');
     return saved ? JSON.parse(saved) : null;
   } catch { return null; }
 }
 
-function savePublicUser(user: PublicUser): void {
-  localStorage.setItem('er_public_user', JSON.stringify(user));
+async function savePublicUser(user: PublicUser): Promise<void> {
+  await AsyncStorage.setItem('er_public_user', JSON.stringify(user));
 }
 
-function clearPublicUser(): void {
-  localStorage.removeItem('er_public_user');
+async function clearPublicUser(): Promise<void> {
+  await AsyncStorage.removeItem('er_public_user');
 }
 
 export const App: React.FC = () => {
-  const savedPublicUser = loadSavedPublicUser();
-  const [screen, setScreen] = useState<AppScreen>(
-    savedPublicUser ? { type: 'public', publicUser: savedPublicUser } : { type: 'role-selection' }
-  );
+  const [screen, setScreen] = useState<AppScreen>({ type: 'role-selection' });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadSavedPublicUser().then((savedUser) => {
+      if (savedUser) {
+        setScreen({ type: 'public', publicUser: savedUser });
+      }
+      setLoading(false);
+    });
+  }, []);
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
 
   const renderScreen = () => {
@@ -431,6 +439,14 @@ export const App: React.FC = () => {
         );
     }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={appStyles.safeArea}>
+        <StatusBar barStyle="light-content" backgroundColor="#121220" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <AppContext.Provider value={{ currentUser, setCurrentUser }}>

@@ -3,10 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "@react-native-community/geolocation": "*",
     "@react-native/metro-config": "*",
+    "metro-config": "*",
     "react": "*",
     "react-native": "*",
-    "react-native-svg": "*",
-    "metro-config": "*"
+    "react-native-svg": "*"
   }
 }
