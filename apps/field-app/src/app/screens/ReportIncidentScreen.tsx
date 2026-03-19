@@ -15,6 +15,37 @@ import { db, collection, doc, updateDoc } from '../firebase';
 import { setDoc } from 'firebase/firestore';
 
 type IncidentType = 'fire' | 'medical' | 'security' | 'water_leakage' | 'power_failure';
+type AffectedArea = 'small' | 'medium' | 'large';
+type Severity = 'critical' | 'high' | 'medium' | 'low';
+
+const BASE_SCORES: Record<IncidentType, number> = {
+  fire: 3,
+  medical: 2,
+  security: 2,
+  water_leakage: 1,
+  power_failure: 1,
+};
+
+function scoreSeverity(input: {
+  type: IncidentType;
+  casualties?: number;
+  affectedArea?: AffectedArea;
+  hazardousMaterials?: boolean;
+  structuralDamage?: boolean;
+}): Severity {
+  let score = BASE_SCORES[input.type];
+  if (input.casualties && input.casualties > 0) {
+    score += input.casualties >= 5 ? 3 : input.casualties >= 1 ? 2 : 0;
+  }
+  if (input.affectedArea === 'large') score += 2;
+  else if (input.affectedArea === 'medium') score += 1;
+  if (input.hazardousMaterials) score += 2;
+  if (input.structuralDamage) score += 1;
+  if (score >= 7) return 'critical';
+  if (score >= 5) return 'high';
+  if (score >= 3) return 'medium';
+  return 'low';
+}
 
 const INCIDENT_TYPES: { key: IncidentType; label: string; icon: string }[] = [
   { key: 'fire', label: 'Fire', icon: '🔥' },
@@ -33,6 +64,10 @@ interface Props {
 export const ReportIncidentScreen: React.FC<Props> = ({ reporterName, reporterEmail, onSubmitted }) => {
   const [selectedType, setSelectedType] = useState<IncidentType | null>(null);
   const [description, setDescription] = useState('');
+  const [casualties, setCasualties] = useState('');
+  const [affectedArea, setAffectedArea] = useState<AffectedArea>('small');
+  const [hazardousMaterials, setHazardousMaterials] = useState(false);
+  const [structuralDamage, setStructuralDamage] = useState(false);
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
   const [locationStatus, setLocationStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -84,11 +119,20 @@ export const ReportIncidentScreen: React.FC<Props> = ({ reporterName, reporterEm
     try {
       const now = new Date().toISOString();
       const incidentRef = doc(collection(db, 'incidents'));
+      const casualtyCount = parseInt(casualties, 10) || 0;
+
+      const severity = scoreSeverity({
+        type: selectedType,
+        casualties: casualtyCount,
+        affectedArea: affectedArea,
+        hazardousMaterials,
+        structuralDamage,
+      });
 
       await setDoc(incidentRef, {
         incident_id: incidentRef.id,
         type: selectedType,
-        severity: 'medium', // default; cloud function can re-score
+        severity,
         status: 'reported',
         location: { lat: parseFloat(lat) || 0, lng: parseFloat(lng) || 0 },
         description: description.trim(),
@@ -102,6 +146,10 @@ export const ReportIncidentScreen: React.FC<Props> = ({ reporterName, reporterEm
 
       setSelectedType(null);
       setDescription('');
+      setCasualties('');
+      setAffectedArea('small');
+      setHazardousMaterials(false);
+      setStructuralDamage(false);
       onSubmitted();
     } catch (err) {
       console.error('Failed to submit incident:', err);
@@ -146,6 +194,61 @@ export const ReportIncidentScreen: React.FC<Props> = ({ reporterName, reporterEm
         numberOfLines={4}
         textAlignVertical="top"
       />
+
+      <Text style={styles.label}>Situation Details</Text>
+      <View style={styles.detailsCard}>
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>Casualties</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={casualties}
+            onChangeText={setCasualties}
+            placeholder="0"
+            placeholderTextColor="#555"
+            keyboardType="number-pad"
+          />
+        </View>
+
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>Affected Area</Text>
+          <View style={styles.segmentRow}>
+            {(['small', 'medium', 'large'] as AffectedArea[]).map((size) => (
+              <TouchableOpacity
+                key={size}
+                style={[styles.segmentBtn, affectedArea === size && styles.segmentBtnActive]}
+                onPress={() => setAffectedArea(size)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.segmentText, affectedArea === size && styles.segmentTextActive]}>
+                  {size.charAt(0).toUpperCase() + size.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={styles.toggleRow}
+          onPress={() => setHazardousMaterials(!hazardousMaterials)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.fieldLabel}>Hazardous Materials</Text>
+          <View style={[styles.toggle, hazardousMaterials && styles.toggleActive]}>
+            <View style={[styles.toggleThumb, hazardousMaterials && styles.toggleThumbActive]} />
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.toggleRow, { borderBottomWidth: 0 }]}
+          onPress={() => setStructuralDamage(!structuralDamage)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.fieldLabel}>Structural Damage</Text>
+          <View style={[styles.toggle, structuralDamage && styles.toggleActive]}>
+            <View style={[styles.toggleThumb, structuralDamage && styles.toggleThumbActive]} />
+          </View>
+        </TouchableOpacity>
+      </View>
 
       <Text style={styles.label}>Your Location</Text>
       <View style={styles.locationCard}>
@@ -221,6 +324,55 @@ const styles = StyleSheet.create({
     backgroundColor: '#1e1e2e', borderRadius: 10, padding: 14,
     color: '#e0e0e0', fontSize: 14, minHeight: 100, marginBottom: 24,
     borderWidth: 1, borderColor: '#2a2a3e',
+  },
+  detailsCard: {
+    backgroundColor: '#1e1e2e', borderRadius: 12, padding: 16,
+    marginBottom: 24, borderWidth: 1, borderColor: '#2a2a3e',
+  },
+  fieldRow: {
+    marginBottom: 16,
+  },
+  fieldLabel: {
+    fontSize: 13, color: '#aaa', fontWeight: '500', marginBottom: 8,
+  },
+  fieldInput: {
+    backgroundColor: '#151525', borderRadius: 8, padding: 12,
+    color: '#e0e0e0', fontSize: 14, borderWidth: 1, borderColor: '#2a2a3e',
+    width: 80,
+  },
+  segmentRow: {
+    flexDirection: 'row', gap: 8,
+  },
+  segmentBtn: {
+    flex: 1, paddingVertical: 10, borderRadius: 8,
+    backgroundColor: '#151525', alignItems: 'center',
+    borderWidth: 1, borderColor: '#2a2a3e',
+  },
+  segmentBtnActive: {
+    backgroundColor: '#1e1e3e', borderColor: '#6c8cff',
+  },
+  segmentText: {
+    fontSize: 13, color: '#666', fontWeight: '600',
+  },
+  segmentTextActive: {
+    color: '#6c8cff',
+  },
+  toggleRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#2a2a3e',
+  },
+  toggle: {
+    width: 44, height: 24, borderRadius: 12,
+    backgroundColor: '#333', justifyContent: 'center', paddingHorizontal: 2,
+  },
+  toggleActive: {
+    backgroundColor: '#6c8cff',
+  },
+  toggleThumb: {
+    width: 20, height: 20, borderRadius: 10, backgroundColor: '#888',
+  },
+  toggleThumbActive: {
+    alignSelf: 'flex-end', backgroundColor: '#fff',
   },
   locationCard: {
     backgroundColor: '#1e1e2e', borderRadius: 12, padding: 16,

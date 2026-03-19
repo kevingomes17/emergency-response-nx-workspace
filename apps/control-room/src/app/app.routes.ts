@@ -28,6 +28,20 @@ export const appRoutes: Route[] = [
       ),
   },
   {
+    path: 'resources',
+    loadComponent: () =>
+      import('@emergency-response/control-room/feature-resources').then(
+        (m) => m.ResourcesPage
+      ),
+  },
+  {
+    path: 'faq',
+    loadComponent: () =>
+      import('@emergency-response/control-room/feature-faq').then(
+        (m) => m.FaqPage
+      ),
+  },
+  {
     path: '**',
     redirectTo: 'dashboard',
   },

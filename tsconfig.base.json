@@ -24,8 +24,14 @@
       "@emergency-response/control-room/feature-dashboard": [
         "libs/control-room/feature-dashboard/src/index.ts"
       ],
+      "@emergency-response/control-room/feature-faq": [
+        "libs/control-room/feature-faq/src/index.ts"
+      ],
       "@emergency-response/control-room/feature-incident": [
         "libs/control-room/feature-incident/src/index.ts"
+      ],
+      "@emergency-response/control-room/feature-resources": [
+        "libs/control-room/feature-resources/src/index.ts"
       ],
       "@emergency-response/control-room/ui-components": [
         "libs/control-room/ui-components/src/index.ts"
