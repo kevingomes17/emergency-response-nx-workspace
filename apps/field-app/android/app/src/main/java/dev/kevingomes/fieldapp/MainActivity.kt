@@ -1,4 +1,4 @@
-package com.fieldapp
+package dev.kevingomes.fieldapp
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

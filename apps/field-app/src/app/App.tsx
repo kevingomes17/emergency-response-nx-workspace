@@ -17,6 +17,7 @@ import { ReportIncidentScreen } from './screens/ReportIncidentScreen';
 import { MyReportsScreen } from './screens/MyReportsScreen';
 import type { Incident } from './screens/AssignmentsScreen';
 import { db, collection, onSnapshot } from './firebase';
+import { useFcmToken } from './hooks/useFcmToken';
 
 // ── Types ──
 
@@ -394,6 +395,8 @@ export const App: React.FC = () => {
     });
   }, []);
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+
+  useFcmToken(currentUser?.uid ?? null);
 
   const renderScreen = () => {
     switch (screen.type) {

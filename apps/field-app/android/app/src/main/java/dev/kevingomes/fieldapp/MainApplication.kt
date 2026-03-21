@@ -1,4 +1,4 @@
-package com.fieldapp
+package dev.kevingomes.fieldapp
 
 import android.app.Application
 import com.facebook.react.PackageList

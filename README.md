@@ -28,14 +28,16 @@ nx serve cloud-functions # Launch the cloud-functions locally
 npx ts-node apps/cloud-functions/src/seed.ts # Load seed data
 nx serve control-room # Launch the control-room web app
 
-npx nx serve field-app # Web (quickest for testing). This uses Vite to serve it as a web app in your browser.
+nx serve field-app # Web (quickest for testing). This uses Vite to serve it as a web app in your browser.
 
 cd apps/field-app/ios && pod install
-npx nx run field-app:run-ios # iOS Simulator. Requires Xcode and CocoaPods installed.
+nx run field-app:run-ios # iOS Simulator. Requires Xcode and CocoaPods installed.
 
-npx nx run field-app:run-android # Android Emulator. Requires Android Studio and an emulator set up.
+nx run field-app:run-android # Android Emulator. Requires Android Studio and an emulator set up.
+nx run field-app:run-android --device 
 
 npx react-native doctor # Optional. To debug issues with launching the mobile app in a simulator.
+
 ```
 
 **Deployment instructions**

@@ -1,9 +1,11 @@
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import type {
   Incident,
   Alert,
   Resource,
+  User,
 } from '@emergency-response/shared/data-models';
 import { COLLECTIONS, INCIDENT_RESOURCE_MAP } from '@emergency-response/shared/data-models';
 import {
@@ -24,6 +26,7 @@ export const onIncidentCreated = onDocumentCreated(
     const now = new Date();
 
     const actions = evaluateEscalation(incident, DEFAULT_ESCALATION_RULES, now);
+    console.log(`[onIncidentCreated] Incident ${incident.incident_id} severity=${incident.severity} actions=`, actions.map(a => a.type));
 
     for (const action of actions) {
       if (action.type === 'notify') {
@@ -31,7 +34,12 @@ export const onIncidentCreated = onDocumentCreated(
       }
 
       if (action.type === 'auto_dispatch') {
-        await autoDispatch(incident);
+        try {
+          await autoDispatch(incident);
+          console.log(`[onIncidentCreated] Auto-dispatch completed for ${incident.incident_id}`);
+        } catch (err) {
+          console.error(`[onIncidentCreated] Auto-dispatch FAILED for ${incident.incident_id}:`, err);
+        }
       }
     }
   }
@@ -44,7 +52,15 @@ export const onIncidentUpdated = onDocumentUpdated(
     const before = event.data?.before?.data() as Incident | undefined;
     if (!after || !before) return;
 
-    // Only re-evaluate if status changed
+    // Notify newly assigned units
+    const newUnits = (after.assigned_units || []).filter(
+      (u) => !(before.assigned_units || []).includes(u)
+    );
+    if (newUnits.length > 0) {
+      await notifyAssignedUnits(after, newUnits);
+    }
+
+    // Re-evaluate escalation if status changed
     if (after.status !== before.status) {
       const now = new Date();
       const actions = evaluateEscalation(after, DEFAULT_ESCALATION_RULES, now);
@@ -91,6 +107,7 @@ async function createAlert(
 
 async function autoDispatch(incident: Incident): Promise<void> {
   const resourceType = INCIDENT_RESOURCE_MAP[incident.type];
+  console.log(`[autoDispatch] Looking for resource type=${resourceType} for incident ${incident.incident_id}`);
 
   const snapshot = await db
     .collection(COLLECTIONS.RESOURCES)
@@ -99,7 +116,10 @@ async function autoDispatch(incident: Incident): Promise<void> {
     .limit(1)
     .get();
 
-  if (snapshot.empty) return;
+  if (snapshot.empty) {
+    console.log(`[autoDispatch] No available ${resourceType} resources found`);
+    return;
+  }
 
   const resource = snapshot.docs[0];
   const unitId = resource.data().unit_id as string;
@@ -114,9 +134,46 @@ async function autoDispatch(incident: Incident): Promise<void> {
 
   batch.update(db.collection(COLLECTIONS.INCIDENTS).doc(incident.incident_id), {
     status: 'dispatched',
-    assigned_units: admin.firestore.FieldValue.arrayUnion(unitId),
+    assigned_units: FieldValue.arrayUnion(unitId),
     updated_at: new Date().toISOString(),
   });
 
   await batch.commit();
+}
+
+async function notifyAssignedUnits(
+  incident: Incident,
+  unitIds: string[]
+): Promise<void> {
+  // Find users assigned to these units
+  const usersSnapshot = await db
+    .collection(COLLECTIONS.USERS)
+    .where('assigned_unit', 'in', unitIds)
+    .where('is_active', '==', true)
+    .get();
+
+  if (usersSnapshot.empty) {
+    console.log(`[notifyAssignedUnits] No active users found for units: ${unitIds.join(', ')}`);
+    return;
+  }
+
+  const targetUserIds = usersSnapshot.docs.map((d) => d.id);
+  console.log(`[notifyAssignedUnits] Notifying ${targetUserIds.length} users for units: ${unitIds.join(', ')}`);
+
+  // Create an alert targeting these specific users
+  const alertRef = db.collection(COLLECTIONS.ALERTS).doc();
+  const alert: Alert = {
+    alert_id: alertRef.id,
+    incident_id: incident.incident_id,
+    target_user_ids: targetUserIds,
+    target_roles: [],
+    channel: 'push',
+    priority: getAlertPriorityForSeverity(incident.severity),
+    title: `Dispatched: ${incident.type.replace('_', ' ')} incident`,
+    body: `Your unit has been assigned to a ${incident.severity} ${incident.type.replace('_', ' ')} incident`,
+    acknowledged: false,
+    created_at: new Date().toISOString(),
+  };
+
+  await alertRef.set(alert);
 }

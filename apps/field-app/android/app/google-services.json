@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "157312652398",
+    "project_id": "emergency-response-c6d39",
+    "storage_bucket": "emergency-response-c6d39.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:157312652398:android:1c6dd8c048b97844bec27f",
+        "android_client_info": {
+          "package_name": "com.fieldapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCC4dMhZNtey5rs47LK5qH1xgcnQOKzQpQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:157312652398:android:c4c330e5ae959ed6bec27f",
+        "android_client_info": {
+          "package_name": "dev.kevingomes.fieldapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCC4dMhZNtey5rs47LK5qH1xgcnQOKzQpQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

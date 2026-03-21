@@ -8,6 +8,8 @@
     "metro-config": "*",
     "react": "*",
     "react-native": "*",
-    "react-native-svg": "*"
+    "react-native-svg": "*",
+    "@react-native-firebase/app": "*",
+    "@react-native-firebase/messaging": "*"
   }
 }

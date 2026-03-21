@@ -15,7 +15,12 @@ if linkage != nil
 end
 
 target 'FieldApp' do
+  use_frameworks! :linkage => :static
   config = use_native_modules!
+
+  pod 'FirebaseCore', :modular_headers => true
+  pod 'FirebaseMessaging', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
 
   use_react_native!(
     :path => config[:reactNativePath],

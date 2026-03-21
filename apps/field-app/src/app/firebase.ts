@@ -9,15 +9,19 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  arrayUnion,
+  arrayRemove,
 } from 'firebase/firestore';
+import { Platform } from 'react-native';
 import { environment } from './environment';
 
 const app = initializeApp(environment.firebase, 'field-app');
 const db = getFirestore(app);
 
 if (environment.useEmulator) {
-  connectFirestoreEmulator(db, '127.0.0.1', 8080);
-  console.log('[field-app] Connected to Firestore emulator');
+  const emulatorHost = Platform.OS === 'android' ? '10.0.2.2' : '127.0.0.1';
+  connectFirestoreEmulator(db, emulatorHost, 8080);
+  console.log(`[field-app] Connected to Firestore emulator at ${emulatorHost}:8080`);
 }
 
 // Debug: test basic Firestore connectivity
@@ -37,4 +41,6 @@ export {
   onSnapshot,
   doc,
   updateDoc,
+  arrayUnion,
+  arrayRemove,
 };
