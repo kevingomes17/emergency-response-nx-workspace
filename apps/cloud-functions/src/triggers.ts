@@ -91,6 +91,19 @@ export const onIncidentUpdated = onDocumentUpdated(
       }
     }
 
+    // Create alert when manually escalated
+    if (after.escalation_level !== before.escalation_level && after.escalation_level > before.escalation_level) {
+      const escalationTargets: Record<number, string[]> = {
+        1: ['supervisor'],
+        2: ['manager'],
+        3: ['director'],
+      };
+      const targetRoles = escalationTargets[after.escalation_level] ?? ['supervisor'];
+      const reason = `Incident manually escalated to level ${after.escalation_level}`;
+      console.log(`[onIncidentUpdated] ${reason}, alerting: ${targetRoles.join(', ')}`);
+      await createAlert(after, targetRoles, reason);
+    }
+
     // Re-evaluate escalation if status changed
     if (after.status !== before.status) {
       const now = new Date();
