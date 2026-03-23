@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import * as esbuild from 'esbuild';
 import { readFileSync } from 'fs';
+import { resolve } from 'path';
 
 const extensions = [
   '.mjs',
@@ -38,6 +39,14 @@ export default defineConfig({
   resolve: {
     extensions,
     alias: {
+      'react-native/Libraries/vendor/emitter/EventEmitter': resolve(
+        import.meta.dirname,
+        'src/stubs/EventEmitter.js'
+      ),
+      'react-native/Libraries/Utilities/binaryToBase64': resolve(
+        import.meta.dirname,
+        'src/stubs/binaryToBase64.js'
+      ),
       'react-native': 'react-native-web',
       'react-native-svg': 'react-native-svg-web',
       '@react-native/assets-registry/registry':

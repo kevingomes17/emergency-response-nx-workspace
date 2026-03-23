@@ -25,7 +25,8 @@ nx graph # Optional. View project & library dependency graph. Launches the NX Co
 # Copy the .env.example to .env with `VITE_USE_FIREBASE_EMULATOR=true`
 
 nx serve cloud-functions # Launch the cloud-functions locally
-npx ts-node apps/cloud-functions/src/seed.ts # Load seed data
+npx ts-node apps/cloud-functions/src/seed.ts # Load seed data into firestore
+npx ts-node apps/cloud-functions/src/seed-supabase.ts # Load seed data into supabase
 nx serve control-room # Launch the control-room web app
 
 nx serve field-app # Web (quickest for testing). This uses Vite to serve it as a web app in your browser.

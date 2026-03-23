@@ -1,76 +1,164 @@
 <div class="dashboard">
   <header class="dashboard-header">
-    <h1>Emergency Control Room</h1>
+    <h1>Dashboard</h1>
+    <div class="view-toggle">
+      <button
+        class="toggle-btn"
+        [class.active]="viewMode() === 'list'"
+        (click)="viewMode.set('list')"
+      >
+        <span class="material-icons-outlined toggle-icon">list</span>
+        List
+      </button>
+      <button
+        class="toggle-btn"
+        [class.active]="viewMode() === 'map'"
+        (click)="viewMode.set('map')"
+      >
+        <span class="material-icons-outlined toggle-icon">map</span>
+        Map
+      </button>
+    </div>
   </header>
 
-  <section class="stats-grid">
-    <er-stat-card
-      label="Critical" [value]="criticalCount()" color="#d32f2f"
-      [active]="activeFilter() === 'critical'"
-      (cardClick)="toggleFilter('critical')"
-    />
-    <er-stat-card
-      label="High" [value]="highCount()" color="#f57c00"
-      [active]="activeFilter() === 'high'"
-      (cardClick)="toggleFilter('high')"
-    />
-    <er-stat-card
-      label="Medium" [value]="mediumCount()" color="#fbc02d"
-      [active]="activeFilter() === 'medium'"
-      (cardClick)="toggleFilter('medium')"
-    />
-    <er-stat-card
-      label="Low" [value]="lowCount()" color="#388e3c"
-      [active]="activeFilter() === 'low'"
-      (cardClick)="toggleFilter('low')"
-    />
-    <er-stat-card
-      label="Available Resources" [value]="resourceCount()" color="#1565c0"
-      [active]="activeFilter() === 'resources'"
-      (cardClick)="toggleFilter('resources')"
-    />
-  </section>
+  <!-- Top-level category tabs -->
+  <div class="category-bar">
+    <button
+      class="category-btn"
+      [class.active]="activeCategory() === 'incidents'"
+      (click)="setCategory('incidents')"
+    >
+      <span class="material-icons-outlined cat-icon">warning</span>
+      Incidents
+      <span class="cat-count">{{ incidentCount() }}</span>
+    </button>
+    <button
+      class="category-btn"
+      [class.active]="activeCategory() === 'resources'"
+      (click)="setCategory('resources')"
+    >
+      <span class="material-icons-outlined cat-icon">local_shipping</span>
+      Resources
+      <span class="cat-count">{{ totalResourceCount() }}</span>
+    </button>
+    <button
+      class="category-btn"
+      [class.active]="activeCategory() === 'zones'"
+      (click)="setCategory('zones')"
+    >
+      <span class="material-icons-outlined cat-icon">map</span>
+      Service Zones
+      <span class="cat-count">{{ zoneCount() }}</span>
+    </button>
+  </div>
 
-  @if (activeFilter()) {
-    <div class="filter-bar">
-      <span class="filter-label">
-        Showing: {{ activeFilter() === 'resources' ? 'All Resources' : activeFilter()!.toUpperCase() + ' incidents' }}
-      </span>
-      <button class="clear-filter" (click)="toggleFilter(null)">Clear filter</button>
-    </div>
+  <!-- Sub-filters for Incidents -->
+  @if (activeCategory() === 'incidents') {
+    <section class="stats-grid">
+      <er-stat-card
+        label="Critical" [value]="criticalCount()" color="#d32f2f"
+        [active]="activeSubFilter() === 'critical'"
+        (cardClick)="toggleSubFilter('critical')"
+      />
+      <er-stat-card
+        label="High" [value]="highCount()" color="#f57c00"
+        [active]="activeSubFilter() === 'high'"
+        (cardClick)="toggleSubFilter('high')"
+      />
+      <er-stat-card
+        label="Medium" [value]="mediumCount()" color="#fbc02d"
+        [active]="activeSubFilter() === 'medium'"
+        (cardClick)="toggleSubFilter('medium')"
+      />
+      <er-stat-card
+        label="Low" [value]="lowCount()" color="#388e3c"
+        [active]="activeSubFilter() === 'low'"
+        (cardClick)="toggleSubFilter('low')"
+      />
+    </section>
   }
 
-  @if (showResources()) {
-    <section class="resources-section">
-      <h2>Resources</h2>
-      <div class="resources-grid">
-        @for (resource of resources$ | async; track resource.unit_id) {
-          <er-resource-card [resource]="resource" />
-        } @empty {
-          <p class="empty-state">No resources</p>
-        }
-      </div>
+  <!-- Sub-filters for Resources -->
+  @if (activeCategory() === 'resources') {
+    <section class="stats-grid">
+      <er-stat-card
+        label="Available" [value]="availableResourceCount()" color="#22c55e"
+        [active]="activeSubFilter() === 'available'"
+        (cardClick)="toggleSubFilter('available')"
+      />
+      <er-stat-card
+        label="Dispatched" [value]="dispatchedResourceCount()" color="#f97316"
+        [active]="activeSubFilter() === 'dispatched'"
+        (cardClick)="toggleSubFilter('dispatched')"
+      />
+      <er-stat-card
+        label="Offline" [value]="offlineResourceCount()" color="#737373"
+        [active]="activeSubFilter() === 'offline'"
+        (cardClick)="toggleSubFilter('offline')"
+      />
     </section>
-  } @else {
-    <section class="incident-list-section">
-      <h2>
-        @if (activeFilter()) {
-          {{ activeFilter()!.charAt(0).toUpperCase() + activeFilter()!.slice(1) }} Incidents
-        } @else {
-          Live Incidents
-        }
-      </h2>
+  }
 
-      <div class="incident-list">
-        @for (incident of filteredIncidents(); track incident.incident_id) {
-          <er-incident-card
-            [incident]="incident"
-            (selectIncident)="onIncidentSelect($event)"
-          />
-        } @empty {
-          <p class="empty-state">No {{ activeFilter() ?? '' }} incidents</p>
-        }
-      </div>
-    </section>
+  @if (viewMode() === 'map') {
+    <er-dashboard-map
+      [incidents]="filteredIncidents()"
+      [resources]="filteredResources()"
+      [serviceZones]="serviceZones()"
+      [showIncidents]="activeCategory() === 'incidents'"
+      [showResources]="activeCategory() === 'resources'"
+      [showZones]="activeCategory() === 'zones'"
+    />
+  } @else {
+    @if (activeCategory() === 'incidents') {
+      <section class="incident-list-section">
+        <h2>
+          @if (activeSubFilter()) {
+            {{ activeSubFilter()!.toString().charAt(0).toUpperCase() + activeSubFilter()!.toString().slice(1) }} Incidents
+          } @else {
+            Live Incidents
+          }
+        </h2>
+
+        <div class="incident-list">
+          @for (incident of filteredIncidents(); track incident.incident_id) {
+            <er-incident-card
+              [incident]="incident"
+              [availableResources]="availableResourcesList()"
+              (selectIncident)="onIncidentSelect($event)"
+              (action)="onIncidentAction($event)"
+              (dispatchResource$)="onDispatchResource($event)"
+            />
+          } @empty {
+            <p class="empty-state">No {{ activeSubFilter() ?? '' }} incidents</p>
+          }
+        </div>
+      </section>
+    }
+
+    @if (activeCategory() === 'resources') {
+      <section class="resources-section">
+        <h2>
+          @if (activeSubFilter()) {
+            {{ activeSubFilter()!.toString().charAt(0).toUpperCase() + activeSubFilter()!.toString().slice(1) }} Resources
+          } @else {
+            All Resources
+          }
+        </h2>
+        <div class="resources-grid">
+          @for (resource of filteredResources(); track resource.unit_id) {
+            <er-resource-card [resource]="resource" />
+          } @empty {
+            <p class="empty-state">No resources</p>
+          }
+        </div>
+      </section>
+    }
+
+    @if (activeCategory() === 'zones') {
+      <section class="zones-section">
+        <h2>Service Zones</h2>
+        <p class="zones-hint">Switch to Map view to see zone boundaries, or manage zones in Settings.</p>
+      </section>
+    }
   }
 </div>

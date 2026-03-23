@@ -13,6 +13,9 @@
 }
 
 .dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 1.5rem 0 1rem;
 }
 
@@ -23,12 +26,99 @@
   letter-spacing: -0.02em;
 }
 
+/* Category bar */
+.category-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.category-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.5rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #a0a0b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.category-btn:hover {
+  color: #fff;
+}
+
+.category-btn.active {
+  color: #fff;
+  border-bottom-color: #6366f1;
+}
+
+.cat-icon {
+  font-size: 18px;
+}
+
+.cat-count {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.category-btn.active .cat-count {
+  background: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+/* Zones section */
+.zones-section {
+  margin-bottom: 2rem;
+}
+
+.zones-section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #d0d0e0;
+}
+
+.zones-hint {
+  color: #6b6b80;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
 /* Stats grid */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 2rem;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.stats-grid ::ng-deep .stat {
+  padding: 0.65rem 0.75rem;
+  border-top-width: 2px;
+  border-radius: 6px;
+}
+
+.stats-grid ::ng-deep .stat__value {
+  font-size: 1.3rem;
+}
+
+.stats-grid ::ng-deep .stat__label {
+  font-size: 0.72rem;
+}
+
+.stats-grid ::ng-deep .stat__active-icon {
+  font-size: 12px;
+  top: 4px;
+  right: 4px;
 }
 
 @media (min-width: 640px) {
@@ -39,8 +129,46 @@
 
 @media (min-width: 960px) {
   .stats-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.25rem;
+  background: #1e1e2e;
+  border: 1px solid #2e2e3e;
+  border-radius: 8px;
+  padding: 0.25rem;
+  margin-left: auto;
+}
+
+.toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #a0a0b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.toggle-btn:hover {
+  color: #ffffff;
+}
+
+.toggle-btn.active {
+  background: #6366f1;
+  color: #ffffff;
+}
+
+.toggle-icon {
+  font-size: 16px;
 }
 
 /* Filter bar */
@@ -52,7 +180,8 @@
   border: 1px solid #2e2e3e;
   border-radius: 8px;
   padding: 0.6rem 1rem;
-  margin-bottom: 1rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .filter-label {

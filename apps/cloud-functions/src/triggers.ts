@@ -6,8 +6,10 @@ import type {
   Alert,
   Resource,
   User,
+  ResourceType,
 } from '@emergency-response/shared/data-models';
 import { COLLECTIONS, INCIDENT_RESOURCE_MAP } from '@emergency-response/shared/data-models';
+import { calculateDispatch, syncVehicleToSupabase } from '@emergency-response/shared/util-supabase';
 import {
   evaluateEscalation,
   DEFAULT_ESCALATION_RULES,
@@ -52,12 +54,41 @@ export const onIncidentUpdated = onDocumentUpdated(
     const before = event.data?.before?.data() as Incident | undefined;
     if (!after || !before) return;
 
-    // Notify newly assigned units
+    // Notify newly assigned units and sync their status to Supabase
     const newUnits = (after.assigned_units || []).filter(
       (u) => !(before.assigned_units || []).includes(u)
     );
     if (newUnits.length > 0) {
       await notifyAssignedUnits(after, newUnits);
+
+      // Sync newly assigned vehicles to Supabase as 'dispatched'
+      for (const unitId of newUnits) {
+        try {
+          const resourceDoc = await db.collection(COLLECTIONS.RESOURCES).doc(unitId).get();
+          if (resourceDoc.exists) {
+            const r = resourceDoc.data() as Resource;
+            await syncVehicleToSupabase(unitId, r.location, r.status, r.type);
+          }
+        } catch (err) {
+          console.error(`[onIncidentUpdated] Supabase sync failed for ${unitId}:`, err);
+        }
+      }
+    }
+
+    // Sync unassigned vehicles back to available in Supabase
+    const removedUnits = (before.assigned_units || []).filter(
+      (u) => !(after.assigned_units || []).includes(u)
+    );
+    for (const unitId of removedUnits) {
+      try {
+        const resourceDoc = await db.collection(COLLECTIONS.RESOURCES).doc(unitId).get();
+        if (resourceDoc.exists) {
+          const r = resourceDoc.data() as Resource;
+          await syncVehicleToSupabase(unitId, r.location, r.status, r.type);
+        }
+      } catch (err) {
+        console.error(`[onIncidentUpdated] Supabase sync failed for ${unitId}:`, err);
+      }
     }
 
     // Re-evaluate escalation if status changed
@@ -107,7 +138,73 @@ async function createAlert(
 
 async function autoDispatch(incident: Incident): Promise<void> {
   const resourceType = INCIDENT_RESOURCE_MAP[incident.type];
-  console.log(`[autoDispatch] Looking for resource type=${resourceType} for incident ${incident.incident_id}`);
+  console.log(`[autoDispatch] Smart dispatch: type=${resourceType} for incident ${incident.incident_id}`);
+
+  let candidates;
+  try {
+    candidates = await calculateDispatch(
+      incident.location.lat,
+      incident.location.lng,
+      resourceType,
+      5000
+    );
+  } catch (err) {
+    console.error(`[autoDispatch] Supabase RPC failed, falling back to naive dispatch:`, err);
+    return naiveDispatch(incident, resourceType);
+  }
+
+  if (!candidates || candidates.length === 0) {
+    console.log(`[autoDispatch] No candidates from Supabase, falling back to naive dispatch`);
+    return naiveDispatch(incident, resourceType);
+  }
+
+  // Iterate candidates and verify each is still available in Firestore (source of truth)
+  for (const candidate of candidates) {
+    const resourceDoc = await db
+      .collection(COLLECTIONS.RESOURCES)
+      .doc(candidate.vehicle_id)
+      .get();
+
+    if (!resourceDoc.exists) continue;
+
+    const resource = resourceDoc.data() as Resource;
+    if (resource.status !== 'available' || resource.type !== resourceType) continue;
+
+    // Dispatch this unit
+    const batch = db.batch();
+    batch.update(resourceDoc.ref, {
+      status: 'dispatched',
+      assigned_incident: incident.incident_id,
+      last_updated: new Date().toISOString(),
+    });
+    batch.update(db.collection(COLLECTIONS.INCIDENTS).doc(incident.incident_id), {
+      status: 'dispatched',
+      assigned_units: FieldValue.arrayUnion(candidate.vehicle_id),
+      updated_at: new Date().toISOString(),
+    });
+    await batch.commit();
+
+    // Sync dispatched status to Supabase (non-blocking)
+    try {
+      await syncVehicleToSupabase(candidate.vehicle_id, resource.location, 'dispatched', resource.type);
+    } catch (err) {
+      console.error(`[autoDispatch] Supabase status sync failed for ${candidate.vehicle_id}:`, err);
+    }
+
+    console.log(
+      `[autoDispatch] Dispatched ${candidate.vehicle_id} ` +
+      `(distance: ${candidate.distance_meters.toFixed(0)}m, cost: ${candidate.weighted_cost.toFixed(0)})`
+    );
+    return;
+  }
+
+  console.log(`[autoDispatch] No valid Firestore resources matched Supabase candidates`);
+  await alertNoResourceAvailable(incident, resourceType);
+}
+
+/** Fallback dispatch: picks the first available resource of matching type (no proximity logic). */
+async function naiveDispatch(incident: Incident, resourceType: ResourceType): Promise<void> {
+  console.log(`[naiveDispatch] Looking for resource type=${resourceType} for incident ${incident.incident_id}`);
 
   const snapshot = await db
     .collection(COLLECTIONS.RESOURCES)
@@ -117,7 +214,8 @@ async function autoDispatch(incident: Incident): Promise<void> {
     .get();
 
   if (snapshot.empty) {
-    console.log(`[autoDispatch] No available ${resourceType} resources found`);
+    console.log(`[naiveDispatch] No available ${resourceType} resources found`);
+    await alertNoResourceAvailable(incident, resourceType);
     return;
   }
 
@@ -125,20 +223,44 @@ async function autoDispatch(incident: Incident): Promise<void> {
   const unitId = resource.data().unit_id as string;
 
   const batch = db.batch();
-
   batch.update(resource.ref, {
     status: 'dispatched',
     assigned_incident: incident.incident_id,
     last_updated: new Date().toISOString(),
   });
-
   batch.update(db.collection(COLLECTIONS.INCIDENTS).doc(incident.incident_id), {
     status: 'dispatched',
     assigned_units: FieldValue.arrayUnion(unitId),
     updated_at: new Date().toISOString(),
   });
-
   await batch.commit();
+
+  // Sync dispatched status to Supabase (non-blocking)
+  const resourceData = resource.data() as Resource;
+  try {
+    await syncVehicleToSupabase(unitId, resourceData.location, 'dispatched', resourceData.type);
+  } catch (err) {
+    console.error(`[naiveDispatch] Supabase status sync failed for ${unitId}:`, err);
+  }
+}
+
+/** Alert supervisor and manager when no resource is available for dispatch. */
+async function alertNoResourceAvailable(
+  incident: Incident,
+  resourceType: ResourceType
+): Promise<void> {
+  const reason =
+    `No available ${resourceType.replace('_', ' ')} resource found for ` +
+    `${incident.severity} ${incident.type.replace('_', ' ')} incident. ` +
+    `Manual dispatch required.`;
+
+  console.log(`[alertNoResourceAvailable] ${reason}`);
+
+  await createAlert(
+    incident,
+    ['supervisor', 'manager'],
+    reason
+  );
 }
 
 async function notifyAssignedUnits(

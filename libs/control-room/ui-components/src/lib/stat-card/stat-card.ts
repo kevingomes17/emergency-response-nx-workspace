@@ -13,6 +13,9 @@ import { Component, input, output } from '@angular/core';
     >
       <span class="stat__value">{{ value() }}</span>
       <span class="stat__label">{{ label() }}</span>
+      @if (active()) {
+        <span class="stat__active-icon material-icons-outlined">filter_alt</span>
+      }
     </div>
   `,
   styles: [
@@ -29,6 +32,7 @@ import { Component, input, output } from '@angular/core';
         gap: 0.25rem;
         cursor: pointer;
         transition: transform 0.15s, box-shadow 0.15s;
+        position: relative;
       }
       .stat:hover {
         transform: translateY(-2px);
@@ -38,6 +42,16 @@ import { Component, input, output } from '@angular/core';
         outline: 2px solid currentColor;
         outline-offset: -2px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+        background: #f8f8ff;
+      }
+      .stat__active-icon {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        font-size: 14px;
+        color: currentColor;
+        opacity: 0.7;
       }
       .stat__value {
         font-size: 2rem;

@@ -44,6 +44,12 @@
       ],
       "@emergency-response/shared/util-severity": [
         "libs/shared/util-severity/src/index.ts"
+      ],
+      "@emergency-response/shared/util-supabase": [
+        "libs/shared/util-supabase/src/index.ts"
+      ],
+      "@emergency-response/control-room/feature-settings": [
+        "libs/control-room/feature-settings/src/index.ts"
       ]
     }
   },

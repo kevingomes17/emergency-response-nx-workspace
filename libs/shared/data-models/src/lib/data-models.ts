@@ -127,6 +127,18 @@ export interface EscalationAction {
   reason: string;
 }
 
+// ── Service Zone ────────────────────────────────────────
+
+export interface ServiceZone {
+  id: string;
+  name: string;
+  city: string;
+  priority_score: number;
+  boundary: unknown; // GeoJSON object or WKT string from Supabase
+  created_at: string;
+  updated_at: string;
+}
+
 // ── Resource-to-Incident type mapping ────────────────────
 
 export const INCIDENT_RESOURCE_MAP: Record<IncidentType, ResourceType> = {
@@ -145,4 +157,5 @@ export const COLLECTIONS = {
   ALERTS: 'alerts',
   USERS: 'users',
   ESCALATION_RULES: 'escalation_rules',
+  SERVICE_ZONES: 'service_zones',
 } as const;

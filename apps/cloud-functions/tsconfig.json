@@ -19,6 +19,9 @@
       ],
       "@emergency-response/shared/util-escalation": [
         "libs/shared/util-escalation/src/index.ts"
+      ],
+      "@emergency-response/shared/util-supabase": [
+        "libs/shared/util-supabase/src/index.ts"
       ]
     }
   },
@@ -26,7 +29,8 @@
     "src/**/*.ts",
     "../../libs/shared/data-models/src/**/*.ts",
     "../../libs/shared/util-severity/src/**/*.ts",
-    "../../libs/shared/util-escalation/src/**/*.ts"
+    "../../libs/shared/util-escalation/src/**/*.ts",
+    "../../libs/shared/util-supabase/src/**/*.ts"
   ],
-  "exclude": ["node_modules", "src/seed.ts"]
+  "exclude": ["node_modules", "src/seed.ts", "src/seed-supabase.ts"]
 }

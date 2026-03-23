@@ -18,6 +18,7 @@ import { MyReportsScreen } from './screens/MyReportsScreen';
 import type { Incident } from './screens/AssignmentsScreen';
 import { db, collection, onSnapshot } from './firebase';
 import { useFcmToken } from './hooks/useFcmToken';
+import { MaterialIcon } from './components/MaterialIcon';
 
 // ── Types ──
 
@@ -79,7 +80,7 @@ const RoleSelectionScreen: React.FC<RoleSelectionProps> = ({ onSelectMode }) => 
       <View style={roleStyles.cardText}>
         <Text style={roleStyles.cardTitle}>Field Responder</Text>
         <Text style={roleStyles.cardDesc}>
-          I'm an emergency responder assigned to a unit
+          I'm a responder, dispatcher, supervisor, manager, or director
         </Text>
       </View>
     </TouchableOpacity>
@@ -101,7 +102,8 @@ const ResponderSelectScreen: React.FC<ResponderSelectProps> = ({ onSelect, onBac
       collection(db, 'users'),
       (snap) => {
         const all = snap.docs.map((d) => ({ uid: d.id, ...d.data() } as AppUser));
-        setResponders(all.filter((u) => u.role === 'responder'));
+        const fieldRoles = ['responder', 'supervisor', 'dispatcher', 'director', 'manager'];
+        setResponders(all.filter((u) => fieldRoles.includes(u.role)));
       },
       (error) => console.error('[field-app] Failed to load responders:', error)
     );
@@ -115,7 +117,7 @@ const ResponderSelectScreen: React.FC<ResponderSelectProps> = ({ onSelect, onBac
       </TouchableOpacity>
 
       <Text style={selectStyles.title}>Select Your Identity</Text>
-      <Text style={selectStyles.hint}>Choose the responder you are operating as</Text>
+      <Text style={selectStyles.hint}>Choose your identity to continue</Text>
 
       {responders.map((user) => (
         <TouchableOpacity
@@ -131,8 +133,9 @@ const ResponderSelectScreen: React.FC<ResponderSelectProps> = ({ onSelect, onBac
           </View>
           <View style={selectStyles.userInfo}>
             <Text style={selectStyles.userName}>{user.display_name}</Text>
-            <Text style={selectStyles.userUnit}>
-              Unit: {user.assigned_unit ?? 'Unassigned'}
+            <Text style={selectStyles.userRole}>
+              {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+              {user.assigned_unit ? ` · Unit: ${user.assigned_unit}` : ''}
             </Text>
           </View>
           <Text style={selectStyles.arrow}>›</Text>
@@ -203,9 +206,9 @@ const PublicNameScreen: React.FC<PublicNameProps> = ({ onSubmit, onBack }) => {
 // ── Responder App ──
 
 const responderTabs: { key: ResponderTab; label: string; icon: string }[] = [
-  { key: 'assignments', label: 'Assignments', icon: '📋' },
-  { key: 'notifications', label: 'Alerts', icon: '🔔' },
-  { key: 'profile', label: 'Profile', icon: '👤' },
+  { key: 'assignments', label: 'Assignments', icon: 'assignment' },
+  { key: 'notifications', label: 'Alerts', icon: 'notifications' },
+  { key: 'profile', label: 'Profile', icon: 'person' },
 ];
 
 interface ResponderAppProps {
@@ -229,7 +232,7 @@ const ResponderApp: React.FC<ResponderAppProps> = ({ user, onLogout }) => {
             </View>
             <Text style={profileStyles.name}>{user.display_name}</Text>
             <Text style={profileStyles.unit}>Unit: {user.assigned_unit ?? 'None'}</Text>
-            <Text style={profileStyles.role}>Role: Responder</Text>
+            <Text style={profileStyles.role}>Role: {user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Text>
           </View>
           <TouchableOpacity style={profileStyles.logoutButton} onPress={onLogout}>
             <Text style={profileStyles.logoutText}>Switch Identity</Text>
@@ -282,7 +285,7 @@ const ResponderApp: React.FC<ResponderAppProps> = ({ user, onLogout }) => {
               onPress={() => { setSelectedIncident(null); setActiveTab(tab.key); }}
               activeOpacity={0.7}
             >
-              <Text style={[appStyles.tabIcon, isActive && appStyles.tabIconActive]}>{tab.icon}</Text>
+              <MaterialIcon name={tab.icon} size={22} color={isActive ? '#6c8cff' : '#666'} />
               <Text style={[appStyles.tabLabel, isActive && appStyles.tabLabelActive]}>{tab.label}</Text>
               {isActive && <View style={appStyles.tabIndicator} />}
             </TouchableOpacity>
@@ -296,8 +299,8 @@ const ResponderApp: React.FC<ResponderAppProps> = ({ user, onLogout }) => {
 // ── Public App ──
 
 const publicTabs: { key: PublicTab; label: string; icon: string }[] = [
-  { key: 'report', label: 'Report', icon: '🆘' },
-  { key: 'my-reports', label: 'My Reports', icon: '📋' },
+  { key: 'report', label: 'Report', icon: 'campaign' },
+  { key: 'my-reports', label: 'My Reports', icon: 'list_alt' },
 ];
 
 interface PublicAppProps {
@@ -342,7 +345,7 @@ const PublicApp: React.FC<PublicAppProps> = ({ reporterName, reporterEmail, onLo
               onPress={() => setActiveTab(tab.key)}
               activeOpacity={0.7}
             >
-              <Text style={[appStyles.tabIcon, isActive && appStyles.tabIconActive]}>{tab.icon}</Text>
+              <MaterialIcon name={tab.icon} size={22} color={isActive ? '#6c8cff' : '#666'} />
               <Text style={[appStyles.tabLabel, isActive && appStyles.tabLabelActive]}>{tab.label}</Text>
               {isActive && <View style={appStyles.tabIndicator} />}
             </TouchableOpacity>
@@ -485,8 +488,6 @@ const appStyles = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: '#2a2a3e', paddingBottom: 4,
   },
   tab: { flex: 1, alignItems: 'center', paddingVertical: 8, position: 'relative' },
-  tabIcon: { fontSize: 20, opacity: 0.5 },
-  tabIconActive: { opacity: 1 },
   tabLabel: { fontSize: 10, color: '#666', marginTop: 2, fontWeight: '500' },
   tabLabelActive: { color: '#6c8cff' },
   tabIndicator: {
@@ -530,7 +531,7 @@ const selectStyles = StyleSheet.create({
   avatarText: { fontSize: 16, fontWeight: '700', color: '#6c8cff' },
   userInfo: { flex: 1 },
   userName: { fontSize: 16, fontWeight: '600', color: '#e0e0e0' },
-  userUnit: { fontSize: 13, color: '#888', marginTop: 2 },
+  userRole: { fontSize: 13, color: '#888', marginTop: 2 },
   arrow: { fontSize: 24, color: '#444' },
 });
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 import {
   requestNotificationPermission,
   getFcmToken,
@@ -12,6 +13,9 @@ export function useFcmToken(userId: string | null) {
   const prevUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // FCM is not available on web — @react-native-firebase requires native modules
+    if (Platform.OS === 'web') return;
+
     if (!userId) {
       // User logged out — clean up token from previous user
       if (prevUserIdRef.current && tokenRef.current) {

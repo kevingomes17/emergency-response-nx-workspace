@@ -28,10 +28,10 @@ export const appRoutes: Route[] = [
       ),
   },
   {
-    path: 'resources',
+    path: 'settings',
     loadComponent: () =>
-      import('@emergency-response/control-room/feature-resources').then(
-        (m) => m.ResourcesPage
+      import('@emergency-response/control-room/feature-settings').then(
+        (m) => m.SettingsPage
       ),
   },
   {

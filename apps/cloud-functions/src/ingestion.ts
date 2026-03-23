@@ -9,6 +9,7 @@ import type {
 } from '@emergency-response/shared/data-models';
 import { COLLECTIONS } from '@emergency-response/shared/data-models';
 import { scoreSeverity } from '@emergency-response/shared/util-severity';
+import { syncVehicleToSupabase } from '@emergency-response/shared/util-supabase';
 
 const db = admin.firestore();
 
@@ -113,6 +114,18 @@ export const ingestResource = onRequest(async (req, res) => {
   };
 
   await docRef.set(resource, { merge: true });
+
+  // Sync vehicle location to Supabase (non-blocking — Firestore is source of truth)
+  try {
+    await syncVehicleToSupabase(
+      unit_id,
+      { lat: location.lat, lng: location.lng },
+      status || 'available',
+      type
+    );
+  } catch (err) {
+    console.error(`[ingestResource] Supabase sync failed for ${unit_id}:`, err);
+  }
 
   res.status(200).json({ unit_id: resource.unit_id, status: resource.status });
 });

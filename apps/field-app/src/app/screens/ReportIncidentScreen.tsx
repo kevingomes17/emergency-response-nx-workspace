@@ -8,8 +8,13 @@ import {
   StyleSheet,
   ActivityIndicator,
   Platform,
-  PermissionsAndroid,
 } from 'react-native';
+
+// PermissionsAndroid is not available in react-native-web, so import it conditionally
+let PermissionsAndroid: typeof import('react-native').PermissionsAndroid | undefined;
+if (Platform.OS !== 'web') {
+  PermissionsAndroid = require('react-native').PermissionsAndroid;
+}
 import Geolocation from '@react-native-community/geolocation';
 import { db, collection, doc, updateDoc } from '../firebase';
 import { setDoc } from 'firebase/firestore';
@@ -75,7 +80,7 @@ export const ReportIncidentScreen: React.FC<Props> = ({ reporterName, reporterEm
 
   useEffect(() => {
     const fetchLocation = async () => {
-      if (Platform.OS === 'android') {
+      if (Platform.OS === 'android' && PermissionsAndroid) {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {

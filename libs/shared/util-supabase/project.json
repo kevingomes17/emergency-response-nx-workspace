@@ -1,0 +1,8 @@
+{
+  "name": "util-supabase",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/util-supabase/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {}
+}

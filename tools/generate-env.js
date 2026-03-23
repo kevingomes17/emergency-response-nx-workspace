@@ -25,6 +25,10 @@ export const environment = {
     messagingSenderId: '${process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || ''}',
     measurementId: '${process.env.VITE_FIREBASE_MEASUREMENT_ID || ''}',
   },
+  supabase: {
+    url: '${process.env.VITE_SUPABASE_URL || ''}',
+    anonKey: '${process.env.VITE_SUPABASE_ANON_KEY || ''}',
+  },
 };
 `;
 

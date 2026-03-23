@@ -36,6 +36,17 @@ import { map, Observable, combineLatest, BehaviorSubject } from 'rxjs';
               </span>
             </div>
             <p class="alert-body">{{ alert.body }}</p>
+            @if (alert.target_roles.length > 0 || alert.target_user_ids.length > 0) {
+              <div class="alert-recipients">
+                <span class="recipients-label">Sent to:</span>
+                @for (role of alert.target_roles; track role) {
+                  <span class="recipient-badge role">{{ role | titlecase }}</span>
+                }
+                @for (uid of alert.target_user_ids; track uid) {
+                  <span class="recipient-badge user">{{ uid }}</span>
+                }
+              </div>
+            }
             <div class="alert-footer">
               <time class="alert-time">{{ alert.created_at | date:'short' }}</time>
               @if (!alert.acknowledged) {
@@ -152,6 +163,37 @@ import { map, Observable, combineLatest, BehaviorSubject } from 'rxjs';
       font-size: 0.85rem;
       margin: 0 0 0.75rem 0;
       line-height: 1.4;
+    }
+
+    .alert-recipients {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .recipients-label {
+      font-size: 0.72rem;
+      color: #6b6b80;
+      font-weight: 500;
+    }
+
+    .recipient-badge {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .recipient-badge.role {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+    }
+
+    .recipient-badge.user {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
     }
 
     .alert-footer {

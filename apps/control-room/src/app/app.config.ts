@@ -12,6 +12,7 @@ import {
 } from '@angular/fire/firestore';
 import { appRoutes } from './app.routes';
 import { environment } from '../environments/environment';
+import { SUPABASE_CONFIG } from '@emergency-response/control-room/data-access';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -26,5 +27,9 @@ export const appConfig: ApplicationConfig = {
       }
       return firestore;
     }),
+    {
+      provide: SUPABASE_CONFIG,
+      useValue: environment.supabase,
+    },
   ],
 };
