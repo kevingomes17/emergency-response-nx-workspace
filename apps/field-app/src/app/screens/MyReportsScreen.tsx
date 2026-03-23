@@ -15,6 +15,7 @@ interface Incident {
   status: string;
   location: { lat: number; lng: number };
   description?: string;
+  assigned_units?: string[];
   created_at: string;
 }
 
@@ -123,6 +124,17 @@ export const MyReportsScreen: React.FC<Props> = ({ reporterEmail }) => {
               <View style={[styles.statusDot, { backgroundColor: status.color }]} />
               <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
             </View>
+
+            {incident.assigned_units && incident.assigned_units.length > 0 && (
+              <View style={styles.dispatchedRow}>
+                <Text style={styles.dispatchedLabel}>Dispatched:</Text>
+                {incident.assigned_units.map((unitId) => (
+                  <View key={unitId} style={styles.unitBadge}>
+                    <Text style={styles.unitBadgeText}>{unitId}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         );
       })}
@@ -154,4 +166,8 @@ const styles = StyleSheet.create({
   statusRow: { flexDirection: 'row', alignItems: 'center' },
   statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
   statusText: { fontSize: 14, fontWeight: '600' },
+  dispatchedRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 10 },
+  dispatchedLabel: { fontSize: 12, color: '#888', fontWeight: '500', marginRight: 4 },
+  unitBadge: { backgroundColor: 'rgba(255, 152, 0, 0.15)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
+  unitBadgeText: { fontSize: 12, fontWeight: '700', color: '#ff9800' },
 });

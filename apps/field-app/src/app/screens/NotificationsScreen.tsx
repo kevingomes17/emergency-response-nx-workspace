@@ -30,9 +30,10 @@ const priorityConfig: Record<string, { color: string; label: string; icon: strin
 interface Props {
   userId: string;
   userRole: string;
+  onViewIncident?: (incidentId: string) => void;
 }
 
-export const NotificationsScreen: React.FC<Props> = ({ userId, userRole }) => {
+export const NotificationsScreen: React.FC<Props> = ({ userId, userRole, onViewIncident }) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -117,19 +118,30 @@ export const NotificationsScreen: React.FC<Props> = ({ userId, userRole }) => {
 
             <Text style={styles.message}>{alert.body}</Text>
 
-            {!alert.acknowledged ? (
-              <TouchableOpacity
-                style={styles.ackButton}
-                onPress={() => handleAcknowledge(alert.alert_id)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.ackButtonText}>Acknowledge</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.ackBadge}>
-                <Text style={styles.ackBadgeText}>Acknowledged</Text>
-              </View>
-            )}
+            <View style={styles.cardActions}>
+              {!alert.acknowledged ? (
+                <TouchableOpacity
+                  style={styles.ackButton}
+                  onPress={() => handleAcknowledge(alert.alert_id)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.ackButtonText}>Acknowledge</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.ackBadge}>
+                  <Text style={styles.ackBadgeText}>Acknowledged</Text>
+                </View>
+              )}
+              {onViewIncident && alert.incident_id && (
+                <TouchableOpacity
+                  style={styles.viewButton}
+                  onPress={() => onViewIncident(alert.incident_id)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.viewButtonText}>View Incident</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         );
       })}
@@ -169,11 +181,17 @@ const styles = StyleSheet.create({
   priorityBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, marginLeft: 8 },
   priorityText: { fontSize: 9, fontWeight: '700', color: '#fff' },
   message: { fontSize: 13, color: '#aaa', lineHeight: 18, marginBottom: 12 },
+  cardActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   ackButton: {
     backgroundColor: '#2a2a4e', paddingVertical: 8, paddingHorizontal: 16,
-    borderRadius: 6, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#3a3a5e',
+    borderRadius: 6, borderWidth: 1, borderColor: '#3a3a5e',
   },
   ackButtonText: { fontSize: 13, fontWeight: '600', color: '#6c8cff' },
-  ackBadge: { alignSelf: 'flex-start' },
+  viewButton: {
+    backgroundColor: '#2a2a4e', paddingVertical: 8, paddingHorizontal: 16,
+    borderRadius: 6, borderWidth: 1, borderColor: '#3a3a5e',
+  },
+  viewButtonText: { fontSize: 13, fontWeight: '600', color: '#ff9800' },
+  ackBadge: {},
   ackBadgeText: { fontSize: 12, color: '#4caf50', fontWeight: '500' },
 });

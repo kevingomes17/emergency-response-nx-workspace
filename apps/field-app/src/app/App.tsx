@@ -16,7 +16,8 @@ import { NotificationsScreen } from './screens/NotificationsScreen';
 import { ReportIncidentScreen } from './screens/ReportIncidentScreen';
 import { MyReportsScreen } from './screens/MyReportsScreen';
 import type { Incident } from './screens/AssignmentsScreen';
-import { db, collection, onSnapshot } from './firebase';
+import { db, collection, onSnapshot, doc } from './firebase';
+import { getDoc } from 'firebase/firestore';
 import { useFcmToken } from './hooks/useFcmToken';
 import { MaterialIcon } from './components/MaterialIcon';
 
@@ -113,7 +114,8 @@ const ResponderSelectScreen: React.FC<ResponderSelectProps> = ({ onSelect, onBac
   return (
     <ScrollView style={selectStyles.container}>
       <TouchableOpacity style={selectStyles.backButton} onPress={onBack}>
-        <Text style={selectStyles.backText}>{'< Back'}</Text>
+        <MaterialIcon name="arrow_back" size={18} color="#6c8cff" />
+        <Text style={selectStyles.backText}>Back</Text>
       </TouchableOpacity>
 
       <Text style={selectStyles.title}>Select Your Identity</Text>
@@ -161,7 +163,8 @@ const PublicNameScreen: React.FC<PublicNameProps> = ({ onSubmit, onBack }) => {
   return (
     <View style={nameStyles.container}>
       <TouchableOpacity style={nameStyles.backButton} onPress={onBack}>
-        <Text style={nameStyles.backText}>{'< Back'}</Text>
+        <MaterialIcon name="arrow_back" size={18} color="#6c8cff" />
+        <Text style={nameStyles.backText}>Back</Text>
       </TouchableOpacity>
 
       <Text style={nameStyles.icon}>🙋</Text>
@@ -241,7 +244,7 @@ const ResponderApp: React.FC<ResponderAppProps> = ({ user, onLogout }) => {
       );
     }
 
-    if (selectedIncident && activeTab === 'assignments') {
+    if (selectedIncident) {
       return (
         <IncidentDetailScreen
           incident={selectedIncident}
@@ -260,7 +263,20 @@ const ResponderApp: React.FC<ResponderAppProps> = ({ user, onLogout }) => {
     }
 
     return (
-      <NotificationsScreen userId={user.uid} userRole={user.role} />
+      <NotificationsScreen
+        userId={user.uid}
+        userRole={user.role}
+        onViewIncident={async (incidentId) => {
+          try {
+            const snap = await getDoc(doc(db, 'incidents', incidentId));
+            if (snap.exists()) {
+              setSelectedIncident({ ...snap.data(), incident_id: snap.id } as Incident);
+            }
+          } catch (err) {
+            console.error('[field-app] Failed to load incident:', err);
+          }
+        }}
+      />
     );
   };
 
@@ -516,7 +532,7 @@ const roleStyles = StyleSheet.create({
 
 const selectStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121220', padding: 16 },
-  backButton: { paddingVertical: 8, marginBottom: 8 },
+  backButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 8, marginBottom: 8 },
   backText: { fontSize: 16, color: '#6c8cff', fontWeight: '500' },
   title: { fontSize: 22, fontWeight: '700', color: '#e0e0e0', marginBottom: 4 },
   hint: { fontSize: 14, color: '#888', marginBottom: 20 },

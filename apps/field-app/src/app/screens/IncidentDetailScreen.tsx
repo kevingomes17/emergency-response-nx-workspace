@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import type { Incident, IncidentStatus } from './AssignmentsScreen';
 import { db, doc, updateDoc } from '../firebase';
+import { MaterialIcon } from '../components/MaterialIcon';
 
 const severityColors: Record<string, string> = {
   low: '#4caf50',
@@ -74,7 +75,8 @@ export const IncidentDetailScreen: React.FC<Props> = ({ incident, onBack }) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <TouchableOpacity style={styles.backButton} onPress={onBack}>
-        <Text style={styles.backText}>{'< Back'}</Text>
+        <MaterialIcon name="arrow_back" size={20} color="#6c8cff" />
+        <Text style={styles.backText}>Back</Text>
       </TouchableOpacity>
 
       <View style={styles.headerSection}>
@@ -170,7 +172,7 @@ function formatTime(isoString: string): string {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121220' },
   content: { padding: 16, paddingBottom: 40 },
-  backButton: { paddingVertical: 8, marginBottom: 8 },
+  backButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 8, marginBottom: 8 },
   backText: { fontSize: 16, color: '#6c8cff', fontWeight: '500' },
   headerSection: { marginBottom: 24 },
   idRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
