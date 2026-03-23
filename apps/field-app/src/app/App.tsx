@@ -8,6 +8,7 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AssignmentsScreen } from './screens/AssignmentsScreen';
@@ -483,7 +484,11 @@ export const App: React.FC = () => {
 // ── Styles ──
 
 const appStyles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#121220' },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#121220',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
   header: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16,
     paddingVertical: 12, backgroundColor: '#1a1a2e',
@@ -553,7 +558,7 @@ const selectStyles = StyleSheet.create({
 
 const nameStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121220', padding: 24 },
-  backButton: { paddingVertical: 8, marginBottom: 24 },
+  backButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 8, marginBottom: 24 },
   backText: { fontSize: 16, color: '#6c8cff', fontWeight: '500' },
   icon: { fontSize: 48, textAlign: 'center', marginBottom: 16 },
   title: { fontSize: 24, fontWeight: '700', color: '#e0e0e0', textAlign: 'center', marginBottom: 8 },

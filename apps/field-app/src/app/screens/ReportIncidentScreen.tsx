@@ -79,7 +79,31 @@ export const ReportIncidentScreen: React.FC<Props> = ({ reporterName, reporterEm
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    const fallback = () => {
+      setLocationStatus('error');
+      setLat('18.5204');
+      setLng('73.8567');
+    };
+
     const fetchLocation = async () => {
+      if (Platform.OS === 'web') {
+        // Use browser Geolocation API on web
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              setLat(position.coords.latitude.toFixed(6));
+              setLng(position.coords.longitude.toFixed(6));
+              setLocationStatus('success');
+            },
+            () => fallback(),
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+          );
+        } else {
+          fallback();
+        }
+        return;
+      }
+
       if (Platform.OS === 'android' && PermissionsAndroid) {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -90,9 +114,7 @@ export const ReportIncidentScreen: React.FC<Props> = ({ reporterName, reporterEm
           }
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          setLocationStatus('error');
-          setLat('37.7749');
-          setLng('-122.4194');
+          fallback();
           return;
         }
       }
@@ -103,11 +125,7 @@ export const ReportIncidentScreen: React.FC<Props> = ({ reporterName, reporterEm
           setLng(position.coords.longitude.toFixed(6));
           setLocationStatus('success');
         },
-        () => {
-          setLocationStatus('error');
-          setLat('37.7749');
-          setLng('-122.4194');
-        },
+        () => fallback(),
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
       );
     };

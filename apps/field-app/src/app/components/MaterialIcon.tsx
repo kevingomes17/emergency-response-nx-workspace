@@ -31,12 +31,21 @@ export const MaterialIcon: React.FC<MaterialIconProps> = ({
 
   // Native fallback: emoji mapping for common icons
   const fallback: Record<string, string> = {
+    arrow_back: '\u{2190}',
     assignment: '\u{1F4CB}',
     notifications: '\u{1F514}',
     person: '\u{1F464}',
     campaign: '\u{1F4E2}',
     report: '\u{1F6D1}',
     list_alt: '\u{1F4CB}',
+    check_circle: '\u{2705}',
+    local_shipping: '\u{1F69A}',
+    task_alt: '\u{2714}',
+    priority_high: '\u{26A0}',
+    map: '\u{1F5FA}',
+    warning: '\u{26A0}',
+    settings: '\u{2699}',
+    list: '\u{1F4C3}',
   };
 
   return (
